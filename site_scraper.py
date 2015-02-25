@@ -1,6 +1,6 @@
 import httplib2
-from oauth2client.client import flow_from_clientsecrets
 from HTMLParser import HTMLParser
+from oauth2client.client import flow_from_clientsecrets
 
 class UpdateExtractor(HTMLParser):
     def __init__(self):
@@ -21,7 +21,6 @@ class UpdateExtractor(HTMLParser):
             self.in_title = False
 
     def handle_data(self, data):
-        print data
         if self.in_title and self.last_tag == 'title':
             self.curr_page = data
             self.pages[self.curr_page] = ''
@@ -53,10 +52,14 @@ def do_ouath():
     http = httplib2.Http()
     return credentials.authorize(http)
 
-if __name__ == "__main__":
+def main():
     http = do_ouath()
-    base_url = 'https://sites.google.com/feeds/content/site/hccpdforum'
-    content = http.request(base_url, 'GET')
+    req_url = 'https://sites.google.com/feeds/content/site/hccpdforum'
+    content = http.request(req_url, 'GET')
     processed_pages = process_pages(content[1])
-    print processed_pages.keys()
-    print processed_pages[processed_pages.keys()[1]]
+    return processed_pages
+
+if __name__ == "__main__":
+    import pickle
+    pgs = main()
+    pickle.dump( pgs, open( "scraped_updates.p", "wb" ) )
