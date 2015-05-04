@@ -1,4 +1,5 @@
 import httplib2
+import re
 from HTMLParser import HTMLParser
 from oauth2client.client import flow_from_clientsecrets
 
@@ -55,8 +56,16 @@ def do_ouath():
 def main():
     http = do_ouath()
     req_url = 'https://sites.google.com/feeds/content/site/hccpdforum'
+    all_content = ''
     content = http.request(req_url, 'GET')
-    processed_pages = process_pages(content[1])
+
+    rexpr = r"<link rel='next' type='application/atom\+xml' href='https://sites\.google\.com/feeds/content/site/hccpdforum(\?start-index=\d{1,3})'/>"
+    match = re.findall(rexpr, content[1])
+    while match:
+        all_content += content[1]
+        content = http.request(''.join((req_url, match[0])), 'GET')
+        match = re.findall(rexpr, content[1])
+    processed_pages = process_pages(all_content)
     return processed_pages
 
 if __name__ == "__main__":
